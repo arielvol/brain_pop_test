@@ -26,6 +26,8 @@ import { activitiesTypeConfig } from "../config/activities_config";
 import { CONSTANTS } from "../common/constants";
 import { ref, computed, defineProps, onMounted } from "vue";
 import ActivitiesService from "../services/ActivitiesService";
+import { useRoute } from 'vue-router';
+
 
 const props = defineProps({
     activityId: {
@@ -42,9 +44,21 @@ const activityConfig = computed(() => activitiesTypeConfig[activity.value.resour
 });
 
 onMounted(async () => {
+
+
     if (props.activityId) {
-        const activitiesList = await ActivitiesService.getAllActivitiesV1();
-        activity.value = activitiesList.find(activity => activity.id === props.activityId);
+        const route = useRoute();
+        const routeName = route.name;
+        let apiActivities = [];
+        if (routeName.toLowerCase().includes('v1')) {
+            apiActivities = await ActivitiesService.getAllActivitiesV1();
+        } else if (routeName.toLowerCase().includes('v2')) {
+            apiActivities = await ActivitiesService.getAllActivitiesV2();
+        } else {
+            apiActivities = await ActivitiesService.getAllActivitiesV1();
+        }
+
+        activity.value = apiActivities.find(activity => activity.id === props.activityId);
     }
 });
 </script>

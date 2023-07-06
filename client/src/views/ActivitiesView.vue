@@ -27,7 +27,7 @@ import { ref, onMounted, toRaw, computed } from "vue";
 import { sortActivitiesByDate, filterActivitiesByTypes, filterActivitiesByText } from "../utils/utils";
 import { activitiesTypeConfig } from "../config/activities_config";
 import { CONSTANTS } from '../common/constants';
-
+import { useRoute } from 'vue-router';
 
 let filtersList = ref([]);
 let originalActivitiesList = ref([]);
@@ -35,8 +35,19 @@ let searchTerm = ref('');
 
 
 onMounted(async () => {
-  const activities = await ActivitiesService.getAllActivitiesV1();
-  const activitiesList = sortActivitiesByDate(activities);
+
+  const route = useRoute();
+  const routeName = route.name;
+  let apiActivities = [];
+  if (routeName.toLowerCase().includes('v1')) {
+    apiActivities = await ActivitiesService.getAllActivitiesV1();
+  } else if (routeName.toLowerCase().includes('v2')) {
+    apiActivities = await ActivitiesService.getAllActivitiesV2();
+  } else {
+    apiActivities = await ActivitiesService.getAllActivitiesV1();
+  }
+
+  const activitiesList = sortActivitiesByDate(apiActivities);
   originalActivitiesList.value = activitiesList;
   updateFilters([]);
 })
