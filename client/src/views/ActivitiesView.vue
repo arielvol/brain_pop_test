@@ -3,7 +3,7 @@
     <section class="hero">
       <div class="title is-2 mb-4">Timeline</div>
     </section>
-    <Search />
+    <Search v-model="searchTerm" :suggestions="suggestions" label-text="Search timeline" />
     <Filter :activities="Object.keys(activitiesTypeConfig)" @update:filters="updateFilters" />
     <v-timeline side="end" density="compact" hide-opposite-content>
       <v-timeline-item v-for="(activities, month) in activitiesByMonth" :key="month">
@@ -24,32 +24,43 @@ import Filter from '../components/Filter.vue'
 import Activity from '../components/Activity.vue'
 import ActivitiesService from '../services/ActivitiesService'
 import { ref, onMounted, toRaw, computed } from "vue";
-import ActivityModel from "../models/activity";
-import { sortActivitiesByDate, filterActivitiesByTypes } from "../utils/utils";
+import { sortActivitiesByDate, filterActivitiesByTypes, filterActivitiesByText } from "../utils/utils";
 import { activitiesTypeConfig } from "../config/activities_config";
+import { CONSTANTS } from '../common/constants';
 
-let originalActivities = ref([]);
+
+let filtersList = ref([]);
+let originalActivitiesList = ref([]);
+let searchTerm = ref('');
+
 
 onMounted(async () => {
-  const response = await ActivitiesService.getAllActivitiesV1();
-  const activitiesList = sortActivitiesByDate(response.data.map(activity => new ActivityModel(activity)));
-  originalActivities.value = activitiesList;
-  updateFilters([]);  // initialize with no filters
+  const activities = await ActivitiesService.getAllActivitiesV1();
+  const activitiesList = sortActivitiesByDate(activities);
+  originalActivitiesList.value = activitiesList;
+  updateFilters([]);
 })
 
-const updateFilters = (filters) => {
-  filteredActivities.value = sortActivitiesByDate(filterActivitiesByTypes(toRaw(originalActivities.value), filters));
+const suggestions = computed(() => {
+  return filteredActivities.value.map(activity => activity.displayText);
+});
+
+const updateFilters = (newFilters) => {
+  filtersList.value = newFilters;
 }
 
-let filteredActivities = ref([]);
-
-
+let filteredActivities = computed(() => {
+  let filtered = filterActivitiesByTypes(toRaw(originalActivitiesList.value), filtersList.value);
+  if (searchTerm.value) {
+    filtered = filterActivitiesByText(filtered, searchTerm.value);
+  }
+  return sortActivitiesByDate(filtered);
+});
 
 const activitiesByMonth = computed(() => {
   let activities = {};
   for (let activity of filteredActivities.value) {
-    let monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    let monthYear = `${monthNames[activity.creationDate.getMonth()]}`;
+    const monthYear = `${CONSTANTS.MONTHS[activity.creationDate.getMonth()]}`;
     if (!(monthYear in activities)) {
       activities[monthYear] = [];
     }
@@ -79,5 +90,4 @@ const activitiesByMonth = computed(() => {
 ::v-deep .v-timeline-divider {
   display: none !important;
 }
-
 </style>

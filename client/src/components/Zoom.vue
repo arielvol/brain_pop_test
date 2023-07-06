@@ -25,7 +25,6 @@ import Score from './Score.vue';
 import { activitiesTypeConfig } from "../config/activities_config";
 import { CONSTANTS } from "../common/constants";
 import { ref, computed, defineProps, onMounted } from "vue";
-import ActivityModel from "../models/activity";
 import ActivitiesService from "../services/ActivitiesService";
 
 const props = defineProps({
@@ -44,8 +43,7 @@ const activityConfig = computed(() => activitiesTypeConfig[activity.value.resour
 
 onMounted(async () => {
     if (props.activityId) {
-        const response = await ActivitiesService.getAllActivitiesV1();
-        const activitiesList = response.data.map(activity => new ActivityModel(activity));
+        const activitiesList = await ActivitiesService.getAllActivitiesV1();
         activity.value = activitiesList.find(activity => activity.id === props.activityId);
     }
 });

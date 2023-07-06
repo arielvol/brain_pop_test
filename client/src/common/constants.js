@@ -11,5 +11,6 @@ export const CONSTANTS = {
     DRAW_ABOUT_IT: "draw_about_it",
     SCORE: "score",
     ZOOM: "zoom",
-    JR_PRODUCT_TYPE: 'bpjr'
+    JR_PRODUCT_TYPE: 'bpjr',
+    MONTHS: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 };
