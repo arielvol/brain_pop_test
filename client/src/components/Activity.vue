@@ -18,7 +18,7 @@
               <v-icon large>mdi-close-circle-outline</v-icon>
             </v-btn>
           </v-card-actions>
-          <Zoom :activity="activity" />
+          <Zoom :activityId="activity.id" />
         </v-card>
       </v-dialog>
     </div>

@@ -18,16 +18,16 @@ const CAMOUFLAGE = 'camouflage.png'
 const props = defineProps({
     iconPath: {
         type: String,
-        required: true
+        required: true,
     },
     productType: {
         type: String,
-        required: true
+        required: true,
     },
 });
 
 const iconBackgroundClass = computed(() => {
-    if (props.iconPath.includes(CAMOUFLAGE)) {
+    if (props.iconPath?.includes(CAMOUFLAGE)) {
         return 'icon-orange-bg';
     } else {
         return 'icon-blue-bg';

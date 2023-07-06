@@ -1,7 +1,5 @@
-//import moment from 'moment';
-import { CONSTANTS } from "../common/constants";
-
 import moment from 'moment';
+import { CONSTANTS } from "../common/constants";
 
 export function generateFormattedDate(dateTimeObj) {
   return moment(dateTimeObj).format("MMM D, YYYY · h:mm a");
