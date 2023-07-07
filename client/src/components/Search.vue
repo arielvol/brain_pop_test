@@ -11,7 +11,6 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { defineProps, defineEmits } from 'vue';
 
 const emit = defineEmits(['update:modelValue']);
 

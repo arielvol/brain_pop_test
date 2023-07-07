@@ -25,8 +25,8 @@
 
 1. Navigate to your client folder: `cd {project folder}/client`
 2. Install project dependencies: `npm install`
-3. Run your dev server. `npm run serve`. Your dev server is ready at http://localhost:8080
-   (The dev server defaults to port 8080. If it's taken and it uses a different one you'll need to update your cors settings in the server app.js)
+3. Run your dev server. `npm run dev`. Your dev server is ready at http://localhost:5173/
+   (The dev server defaults to port 5173. If it's taken and it uses a different one you'll need to update your cors settings in the server app.js)
 
 ## Server
 

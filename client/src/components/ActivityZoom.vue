@@ -13,7 +13,7 @@
             <div class="title is-5 mb-9">
                 {{ activity.comment }}
             </div>
-            <Score v-if="activityConfig[CONSTANTS.SCORE]" :score="activity.score" :possible-score="activity.possibleScore"
+            <ActivityScore v-if="activityConfig[CONSTANTS.SCORE]" :score="activity.score" :possible-score="activity.possibleScore"
                 class="score-margin" />
         </div>
     </div>
@@ -21,11 +21,11 @@
 <script setup>
 
 import ActivityIcon from './ActivityIcon.vue';
-import Score from './Score.vue';
+import ActivityScore from './ActivityScore.vue';
 import { activitiesTypeConfig } from "../config/activities_config";
 import { CONSTANTS } from "../common/constants";
-import { ref, computed, defineProps, onMounted } from "vue";
-import ActivitiesService from "../services/ActivitiesService";
+import { ref, computed, onMounted } from "vue";
+import { getActivities } from '../components/utils/activities_util';
 import { useRoute } from 'vue-router';
 
 
@@ -44,20 +44,10 @@ const activityConfig = computed(() => activitiesTypeConfig[activity.value.resour
 });
 
 onMounted(async () => {
-
-
     if (props.activityId) {
         const route = useRoute();
         const routeName = route.name;
-        let apiActivities = [];
-        if (routeName.toLowerCase().includes('v1')) {
-            apiActivities = await ActivitiesService.getAllActivitiesV1();
-        } else if (routeName.toLowerCase().includes('v2')) {
-            apiActivities = await ActivitiesService.getAllActivitiesV2();
-        } else {
-            apiActivities = await ActivitiesService.getAllActivitiesV1();
-        }
-
+        const apiActivities = await getActivities(routeName);
         activity.value = apiActivities.find(activity => activity.id === props.activityId);
     }
 });

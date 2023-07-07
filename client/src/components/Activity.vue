@@ -8,9 +8,24 @@
       </div>
     </div>
     <div class="zoom-and-score-section">
-      <Score v-if="activityConfig[CONSTANTS.SCORE]" :score="activity.score" :possible-score="activity.possibleScore" />
-      <ViewWorkButton v-if="activityConfig[CONSTANTS.ZOOM]" @viewWorkClicked="handleViewWorkClicked"
-        :activityId="activity.id" />
+      <ActivityScore v-if="activityConfig[CONSTANTS.SCORE]" :score="activity.score" :possible-score="activity.possibleScore" />
+
+      <v-tooltip text="Show Detailed Work Mode" location="top">
+        <template v-slot:activator="{ props }">
+          <ViewWorkButton v-bind="props" v-if="activityConfig[CONSTANTS.ZOOM]" @activity:viewWorkClicked="onViewWorkClicked"
+            :activityId="activity.id" />
+        </template>
+      </v-tooltip>
+
+      <v-tooltip text="Hide Activity" location="top">
+        <template v-slot:activator="{ props }">
+          <v-btn v-bind="props" class="borderless text-teal title is-6" @click="() => onHideActivity(activity.id)">
+            <v-icon class="mr-1">mdi-eye-off-outline</v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
+
       <v-dialog v-model="dialog">
         <v-card class="dialog-card">
           <v-card-actions class="justify-end">
@@ -18,7 +33,7 @@
               <v-icon large>mdi-close-circle-outline</v-icon>
             </v-btn>
           </v-card-actions>
-          <Zoom :activityId="activity.id" />
+          <ActivityZoom :activityId="activity.id" />
         </v-card>
       </v-dialog>
     </div>
@@ -29,12 +44,13 @@
 <script setup>
 
 import ActivityIcon from './ActivityIcon.vue';
-import Score from './Score.vue';
-import Zoom from './Zoom.vue';
+import ActivityScore from './ActivityScore.vue';
+import ActivityZoom from './ActivityZoom.vue';
 import ViewWorkButton from './ViewWorkButton.vue';
 import { activitiesTypeConfig } from "../config/activities_config";
 import { CONSTANTS } from "../common/constants";
-import { computed, defineProps, ref } from "vue";
+
+import { computed, ref } from "vue";
 
 const props = defineProps({
   activity: {
@@ -43,6 +59,7 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['activity:hide']);
 const dialog = ref(false);
 
 const activityConfig = computed(() => activitiesTypeConfig[props.activity.resourceType] || {
@@ -50,14 +67,17 @@ const activityConfig = computed(() => activitiesTypeConfig[props.activity.resour
   [CONSTANTS.ZOOM]: false,
 });
 
-const handleViewWorkClicked = () => {
+const onViewWorkClicked = () => {
   dialog.value = true;
 };
+
+const onHideActivity = (activityId) => {
+  emit('activity:hide', activityId);
+}
 
 </script>
 
 <style scoped>
-
 .dialog-card {
   width: 50%;
   height: 70%;
@@ -65,10 +85,6 @@ const handleViewWorkClicked = () => {
   max-width: none !important;
   border-radius: 20px !important;
   border: 3px solid teal;
-}
-
-.rounded-lg {
-  background-color: white;
 }
 
 .activity-border {

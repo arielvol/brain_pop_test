@@ -4,101 +4,199 @@
       <div class="title is-2 mb-4">Timeline</div>
     </section>
     <Search v-model="searchTerm" :suggestions="suggestions" label-text="Search timeline" />
-    <Filter :activities="Object.keys(activitiesTypeConfig)" @update:filters="updateFilters" />
-    <v-timeline side="end" density="compact" hide-opposite-content>
-      <v-timeline-item v-for="(activities, month) in activitiesByMonth" :key="month">
-        <v-btn rounded variant="tonal" class="cursor-default has-background-warning mb-7">
-          <div class="title is-5">
-            {{ month }}
+    <ActivityFilter class="mb-4" :activities="Object.keys(activitiesTypeConfig)" @update:filters="onUpdateFilters" />
+    <v-btn class="borderless text-teal mb-9" @click="onUnhideAllActivities">
+      <v-icon class="mr-1">mdi-eye-outline</v-icon>
+      <div class="title is-6 text-teal">
+        Unhide hidden activities
+      </div>
+    </v-btn>
+    <div v-for="(activities, month) in paginatedActivitiesByMonth" :key="`months-${month}`">
+      <v-row :key="month" class="mb-7">
+        <v-col cols="12">
+          <div class="activity-month">{{ month }}</div>
+        </v-col>
+      </v-row>
+      <v-row :key="`activities-${month}`" class="activity-row">
+        <v-col cols="12" v-for="activity in activities" :key="activity.id">
+          <Activity :activity="activity" @activity:hide="onHideActivity" />
+        </v-col>
+      </v-row>
+    </div>
+    <v-row justify="center">
+      <v-col cols="12" class="text-center">
+        <v-btn v-if="hasMoreActivities" class="borderless text-teal mb-9" @click="loadMoreActivities">
+          <v-icon class="mr-1">mdi-chevron-down</v-icon>
+          <div class="title is-6 text-teal">
+            Load more
           </div>
         </v-btn>
-        <Activity v-for="activity in activities" :key="activity.id" :activity="activity" />
-      </v-timeline-item>
-    </v-timeline>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
 <script setup>
 import Search from '../components/Search.vue'
-import Filter from '../components/Filter.vue'
+import ActivityFilter from '../components/ActivityFilter.vue'
 import Activity from '../components/Activity.vue'
-import ActivitiesService from '../services/ActivitiesService'
-import { ref, onMounted, toRaw, computed } from "vue";
+import { ref, onMounted, toRaw, computed, watch } from "vue";
 import { sortActivitiesByDate, filterActivitiesByTypes, filterActivitiesByText } from "../utils/utils";
 import { activitiesTypeConfig } from "../config/activities_config";
 import { CONSTANTS } from '../common/constants';
 import { useRoute } from 'vue-router';
+import { getActivities } from '../components/utils/activities_util';
+
+const HIDDEN_ACTIVITIES_KEY = 'hiddenActivitiesIdList';
+const MAX_ACTIVITIES_TO_SHOW = 10;
 
 let filtersList = ref([]);
 let originalActivitiesList = ref([]);
 let searchTerm = ref('');
-
+let hiddenActivitiesIdList = ref([]);
+let activitiesToShow = ref(MAX_ACTIVITIES_TO_SHOW);
 
 onMounted(async () => {
 
   const route = useRoute();
   const routeName = route.name;
-  let apiActivities = [];
-  if (routeName.toLowerCase().includes('v1')) {
-    apiActivities = await ActivitiesService.getAllActivitiesV1();
-  } else if (routeName.toLowerCase().includes('v2')) {
-    apiActivities = await ActivitiesService.getAllActivitiesV2();
-  } else {
-    apiActivities = await ActivitiesService.getAllActivitiesV1();
+  const apiActivities = await getActivities(routeName);
+  if (localStorage.getItem(HIDDEN_ACTIVITIES_KEY)) {
+    hiddenActivitiesIdList.value = JSON.parse(localStorage.getItem(HIDDEN_ACTIVITIES_KEY));
   }
 
   const activitiesList = sortActivitiesByDate(apiActivities);
   originalActivitiesList.value = activitiesList;
-  updateFilters([]);
+  onUpdateFilters([]);
 })
+
+
+watch(hiddenActivitiesIdList, (newHiddenActivities) => {
+  localStorage.setItem(HIDDEN_ACTIVITIES_KEY, JSON.stringify(newHiddenActivities));
+});
 
 const suggestions = computed(() => {
   return filteredActivities.value.map(activity => activity.displayText);
 });
 
-const updateFilters = (newFilters) => {
+const onUpdateFilters = (newFilters) => {
   filtersList.value = newFilters;
 }
 
+const onUnhideAllActivities = () => {
+  hiddenActivitiesIdList.value = [];
+  localStorage.removeItem(HIDDEN_ACTIVITIES_KEY);
+};
+
+const onHideActivity = (activityId) => {
+  const activity = originalActivitiesList.value.find(item => item.id === activityId);
+  hiddenActivitiesIdList.value = [...hiddenActivitiesIdList.value, activity.id];
+};
+
+
 let filteredActivities = computed(() => {
+  debugger;
   let filtered = filterActivitiesByTypes(toRaw(originalActivitiesList.value), filtersList.value);
   if (searchTerm.value) {
     filtered = filterActivitiesByText(filtered, searchTerm.value);
   }
+  if (hiddenActivitiesIdList.value.length > 0) {
+    filtered = filtered.filter(activity => !hiddenActivitiesIdList.value.includes(activity.id));
+  }
   return sortActivitiesByDate(filtered);
 });
 
-const activitiesByMonth = computed(() => {
-  let activities = {};
+
+// const activitiesByMonth = computed(() => {
+//   let activities = {};
+//   for (let activity of filteredActivities.value) {
+//     const monthYear = `${CONSTANTS.MONTHS[activity.creationDate.getMonth()]}`;
+//     if (!(monthYear in activities)) {
+//       activities[monthYear] = [];
+//     }
+//     activities[monthYear].push(activity);
+//   }
+//   return activities;
+// });
+
+
+// const paginatedActivitiesByMonth = computed(() => {
+//   let paginatedActivities = {};
+//   let count = 0;
+
+//   for (let month in activitiesByMonth.value) {
+//     if (!paginatedActivities[month]) {
+//       paginatedActivities[month] = [];
+//     }
+
+//     for (let activity of activitiesByMonth.value[month]) {
+//       if (!filteredActivities.value.includes(activity)) continue;
+//       if (count >= activitiesToShow.value) return paginatedActivities;
+
+//       paginatedActivities[month].push(activity);
+//       count++;
+//     }
+//   }
+
+//   return paginatedActivities;
+// });
+
+
+const paginatedActivitiesByMonth = computed(() => {
+  let paginatedActivities = {};
+  let count = 0;
+
+  // Sort the activities by month first
+  let activitiesByMonth = {};
   for (let activity of filteredActivities.value) {
     const monthYear = `${CONSTANTS.MONTHS[activity.creationDate.getMonth()]}`;
-    if (!(monthYear in activities)) {
-      activities[monthYear] = [];
+
+    if (!activitiesByMonth[monthYear]) {
+      activitiesByMonth[monthYear] = [];
     }
-    activities[monthYear].push(activity);
+
+    activitiesByMonth[monthYear].push(activity);
   }
-  return activities;
+
+  // Then paginate the sorted activities
+  for (let month in activitiesByMonth) {
+    if (!paginatedActivities[month]) {
+      paginatedActivities[month] = [];
+    }
+
+    for (let activity of activitiesByMonth[month]) {
+      if (count >= activitiesToShow.value) return paginatedActivities;
+
+      paginatedActivities[month].push(activity);
+      count++;
+    }
+  }
+
+  return paginatedActivities;
 });
+
+
+const hasMoreActivities = computed(() => {
+  let totalActivities = filteredActivities.value.length;
+  return activitiesToShow.value < totalActivities;
+});
+
+const loadMoreActivities = () => {
+  activitiesToShow.value += MAX_ACTIVITIES_TO_SHOW;
+};
+
 </script>
 
 <style scoped>
-.cursor-default {
-  cursor: default !important;
+.activity-month {
+  border-radius: 30px;
+  background-color: rgb(244, 226, 195);
+  width: 100px;
+  text-align: center;
+  height: 25px;
 }
 
-.v-timeline {
-  display: inline;
-}
-
-.v-timeline-item__opposite {
-  display: none;
-}
-
-::v-deep .v-timeline-divider__dot {
-  display: none !important;
-}
-
-::v-deep .v-timeline-divider {
-  display: none !important;
+::v-deep .v-col {
+  padding: 0px !important;
 }
 </style>

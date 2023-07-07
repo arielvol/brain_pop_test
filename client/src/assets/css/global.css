@@ -1,0 +1,7 @@
+.borderless {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    text-transform: none !important;
+    font-weight: bolder !important;
+  }

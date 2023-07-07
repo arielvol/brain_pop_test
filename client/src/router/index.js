@@ -20,19 +20,19 @@ const routes = [
   {
     path: '/zoom/:activityId',
     name: 'ZoomDefault',
-    component: () => import('../components/Zoom.vue'),
+    component: () => import('../components/ActivityZoom.vue'),
     props: (route) => ({ activityId: route.params.activityId })
   },
   {
     path: '/zoom/v1/:activityId',
     name: 'ZoomV1',
-    component: () => import('../components/Zoom.vue'),
+    component: () => import('../components/ActivityZoom.vue'),
     props: (route) => ({ activityId: route.params.activityId })
   },
   {
     path: '/zoom//v2/:activityId',
     name: 'ZoomV2',
-    component: () => import('../components/Zoom.vue'),
+    component: () => import('../components/ActivityZoom.vue'),
     props: (route) => ({ activityId: route.params.activityId })
   }
 ]
