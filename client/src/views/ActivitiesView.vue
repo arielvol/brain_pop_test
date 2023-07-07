@@ -95,7 +95,6 @@ const onHideActivity = (activityId) => {
 
 
 let filteredActivities = computed(() => {
-  debugger;
   let filtered = filterActivitiesByTypes(toRaw(originalActivitiesList.value), filtersList.value);
   if (searchTerm.value) {
     filtered = filterActivitiesByText(filtered, searchTerm.value);
@@ -106,70 +105,21 @@ let filteredActivities = computed(() => {
   return sortActivitiesByDate(filtered);
 });
 
-
-// const activitiesByMonth = computed(() => {
-//   let activities = {};
-//   for (let activity of filteredActivities.value) {
-//     const monthYear = `${CONSTANTS.MONTHS[activity.creationDate.getMonth()]}`;
-//     if (!(monthYear in activities)) {
-//       activities[monthYear] = [];
-//     }
-//     activities[monthYear].push(activity);
-//   }
-//   return activities;
-// });
-
-
-// const paginatedActivitiesByMonth = computed(() => {
-//   let paginatedActivities = {};
-//   let count = 0;
-
-//   for (let month in activitiesByMonth.value) {
-//     if (!paginatedActivities[month]) {
-//       paginatedActivities[month] = [];
-//     }
-
-//     for (let activity of activitiesByMonth.value[month]) {
-//       if (!filteredActivities.value.includes(activity)) continue;
-//       if (count >= activitiesToShow.value) return paginatedActivities;
-
-//       paginatedActivities[month].push(activity);
-//       count++;
-//     }
-//   }
-
-//   return paginatedActivities;
-// });
-
-
 const paginatedActivitiesByMonth = computed(() => {
   let paginatedActivities = {};
   let count = 0;
 
-  // Sort the activities by month first
-  let activitiesByMonth = {};
   for (let activity of filteredActivities.value) {
     const monthYear = `${CONSTANTS.MONTHS[activity.creationDate.getMonth()]}`;
 
-    if (!activitiesByMonth[monthYear]) {
-      activitiesByMonth[monthYear] = [];
+    if (!paginatedActivities[monthYear]) {
+      paginatedActivities[monthYear] = [];
     }
 
-    activitiesByMonth[monthYear].push(activity);
-  }
+    if (count >= activitiesToShow.value) return paginatedActivities;
 
-  // Then paginate the sorted activities
-  for (let month in activitiesByMonth) {
-    if (!paginatedActivities[month]) {
-      paginatedActivities[month] = [];
-    }
-
-    for (let activity of activitiesByMonth[month]) {
-      if (count >= activitiesToShow.value) return paginatedActivities;
-
-      paginatedActivities[month].push(activity);
-      count++;
-    }
+    paginatedActivities[monthYear].push(activity);
+    count++;
   }
 
   return paginatedActivities;
