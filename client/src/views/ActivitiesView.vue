@@ -4,13 +4,15 @@
       <div class="title is-2 mb-4">Timeline</div>
     </section>
     <Search v-model="searchTerm" :suggestions="suggestions" label-text="Search timeline" />
-    <ActivityFilter class="mb-4" :activities="Object.keys(activitiesTypeConfig)" @update:filters="onUpdateFilters" />
-    <v-btn class="borderless text-teal mb-9" @click="onUnhideAllActivities">
-      <v-icon class="mr-1">mdi-eye-outline</v-icon>
-      <div class="title is-6 text-teal">
-        Unhide hidden activities
-      </div>
-    </v-btn>
+    <ActivityFilter class="mb-9" :activities="Object.keys(activitiesTypeConfig)" @update:filters="onUpdateFilters" />
+    <div v-if="hiddenActivitiesIdList.length > 0" class="mb-9">
+      <v-btn class="borderless text-teal" @click="onUnhideAllActivities">
+        <v-icon class="mr-1">mdi-eye-outline</v-icon>
+        <div class="title is-6 text-teal">
+          Unhide {{ hiddenActivitiesIdList.length }} hidden activities
+        </div>
+      </v-btn>
+    </div>
     <div v-for="(activities, month) in paginatedActivitiesByMonth" :key="`months-${month}`">
       <v-row :key="month" class="mb-7">
         <v-col cols="12">
